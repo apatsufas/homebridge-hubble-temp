@@ -1,7 +1,7 @@
 const HubbleClient = require('./lib/hubble-client.js');
 const packageJSON = require('./package.json');
 
-module.exports = (Service, Characteristic) => class HubbleAccessory {
+module.exports = (Service, Characteristic, FakeGatoHistoryService) => class HubbleAccessory {
 
     constructor(log, config) {
         this.log = log;        
@@ -9,14 +9,18 @@ module.exports = (Service, Characteristic) => class HubbleAccessory {
         this.hubbleClient = new HubbleClient({
             host: config.host
         });
+		// FakeGato
+    	this.fakeGateHistoryService = undefined;
         this.update_interval = Number(config["update_interval"] || 60);
         this.setup();     
     }
 
     setup() {
+    	this.fakeGateHistoryService = new FakeGatoHistoryService("thermo", this);
         this.services = [
             this.accessoryInfo(),
-            this.sensorService()
+            this.sensorService(),
+            this.fakeGateHistoryService
         ]
     }
 
@@ -50,6 +54,7 @@ module.exports = (Service, Characteristic) => class HubbleAccessory {
             let value;
             try {
                 value = await this.hubbleClient.getTemperature();
+                this.addHistory(value);
             } catch (e) {
                 this.log.error(e.message);
                 return;
@@ -62,11 +67,25 @@ module.exports = (Service, Characteristic) => class HubbleAccessory {
 
         return sensorService;
     }  
+    
+    /**
+         * Log the temperature to the FakeGato-service.
+         * Only works if enableHistory is true and  pollingInterval > 0
+         * @param temperature
+         * @param humidity
+         */
+        addHistory (temperature) {
+                this.fakeGateHistoryService.addEntry({
+                    time: new Date().getTime() / 1000,
+                    temp: temperature,
+                });
+            }
 
     async getCurrentTemperature(callback) {
         try {
             const value = await this.hubbleClient.getTemperature();
             this.log.info(`Current temperature: ${value}°`);
+           // addHistory(value);
             callback(null, value);
         } catch (e) {
             callback(e);
