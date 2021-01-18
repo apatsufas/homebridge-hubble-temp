@@ -4,19 +4,22 @@ const packageJSON = require('./package.json');
 module.exports = (Service, Characteristic, FakeGatoHistoryService) => class HubbleAccessory {
 
     constructor(log, config) {
-        this.log = log;        
+        this.log = log;
         this.services = [];
         this.hubbleClient = new HubbleClient({
             host: config.host
         });
-		// FakeGato
-    	this.fakeGateHistoryService = undefined;
+        // FakeGato
+        this.fakeGateHistoryService = undefined;
         this.update_interval = Number(config["update_interval"] || 60);
-        this.setup();     
+        this.setup();
     }
 
     setup() {
-    	this.fakeGateHistoryService = new FakeGatoHistoryService("thermo", this);
+        this.fakeGateHistoryService = new FakeGatoHistoryService('weather', this, {
+            size: 4096, 				// optional - if you still need to specify the length
+            storage: 'fs',
+        });
         this.services = [
             this.accessoryInfo(),
             this.sensorService(),
@@ -26,19 +29,20 @@ module.exports = (Service, Characteristic, FakeGatoHistoryService) => class Hubb
 
     getServices() {
         return this.services;
-    }    
+    }
 
     accessoryInfo() {
         const accessoryInfo = new Service.AccessoryInformation();
-    
+
         accessoryInfo
-          .setCharacteristic(Characteristic.Manufacturer, "HomeBridge")
-          .setCharacteristic(Characteristic.Model, "Hubble Temperature Plugin")       
-          .setCharacteristic(Characteristic.FirmwareRevision, packageJSON.version)             
-          .setCharacteristic(Characteristic.SerialNumber, "123-456-789");
-    
+            .setCharacteristic(Characteristic.Manufacturer, "HomeBridge")
+            .setCharacteristic(Characteristic.Model, "Hubble Temperature Plugin")
+            .setCharacteristic(Characteristic.FirmwareRevision, packageJSON.version)
+            .setCharacteristic(Characteristic.Manufacturer, "HomeBridge")
+            .setCharacteristic(Characteristic.SerialNumber, "123-456-789");
+
         return accessoryInfo;
-    }    
+    }
 
     sensorService() {
         let sensorService = new Service.TemperatureSensor("Hubble temperature");
@@ -47,14 +51,13 @@ module.exports = (Service, Characteristic, FakeGatoHistoryService) => class Hubb
             .setProps({
                 minValue: -50,
                 maxValue: 50
-            })               
+            })
             .on('get', this.getCurrentTemperature.bind(this));
-        
-        setInterval(async () => {            
+
+        setInterval(async () => {
             let value;
             try {
                 value = await this.hubbleClient.getTemperature();
-                this.addHistory(value);
             } catch (e) {
                 this.log.error(e.message);
                 return;
@@ -62,33 +65,33 @@ module.exports = (Service, Characteristic, FakeGatoHistoryService) => class Hubb
             this.log.info(`Temperature pollig result: ${value}°`);
             sensorService
                 .getCharacteristic(Characteristic.CurrentTemperature)
-                .updateValue(value);   
+                .updateValue(value);
+            this.addHistory(parseFloat(value));
         }, this.update_interval * 1000);
 
         return sensorService;
-    }  
-    
+    }
+
     /**
          * Log the temperature to the FakeGato-service.
          * Only works if enableHistory is true and  pollingInterval > 0
          * @param temperature
          * @param humidity
          */
-        addHistory (temperature) {
-                this.fakeGateHistoryService.addEntry({
-                    time: new Date().getTime() / 1000,
-                    temp: temperature,
-                });
-            }
+    addHistory(temperature) {
+        this.fakeGateHistoryService.addEntry({
+            time: Math.round(new Date().valueOf() / 1000),
+            temp: temperature
+        });
+    }
 
     async getCurrentTemperature(callback) {
         try {
             const value = await this.hubbleClient.getTemperature();
             this.log.info(`Current temperature: ${value}°`);
-           // addHistory(value);
             callback(null, value);
         } catch (e) {
             callback(e);
-        }        
+        }
     };
 }
