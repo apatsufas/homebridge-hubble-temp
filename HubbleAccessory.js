@@ -16,9 +16,9 @@ module.exports = (Service, Characteristic, FakeGatoHistoryService) => class Hubb
     }
 
     setup() {
-        this.fakeGateHistoryService = new FakeGatoHistoryService('weather', this, {
-            size: 4096, 				// optional - if you still need to specify the length
-            storage: 'fs',
+        this.fakeGateHistoryService = new FakeGatoHistoryService('weather', {displayName: 'HubbleCam'},{
+            size:4096, 				// optional - if you still need to specify the length
+            storage:'fs',
         });
         this.services = [
             this.accessoryInfo(),
