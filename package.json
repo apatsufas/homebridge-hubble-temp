@@ -23,6 +23,6 @@
     "url": "https://github.com/onderweg/homebridge-hubble-temp.git"
   },
   "dependencies": {
-    "fakegato-history": "~0.6.1"
+    "fakegato-history": "^0.5.6"
   }
 }
