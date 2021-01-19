@@ -57,3 +57,6 @@ Server: nuvoton
 
 value_temperature: 23.6
 ```
+Thanks
+
+Forked from: Thanks to @onderweg (https://github.com/onderweg/homebridge-hubble-temp).
