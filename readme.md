@@ -11,7 +11,7 @@ Tested with:
 ## Installation
 
 1. Install homebridge
-2. Install this plugin using: `npm install -g https://github.com/onderweg/homebridge-hubble-temp.git` (this package is not yet available on NPM)
+2. Install this plugin using: `npm install -g https://github.com/apatsufas/homebridge-hubble-temp.git` (this package is not yet available on NPM)
 3. Update your Homebridge configuration file (`config.json`)
 
 ## Configuration
