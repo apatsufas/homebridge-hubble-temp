@@ -9,15 +9,17 @@ module.exports = (Service, Characteristic, FakeGatoHistoryService) => class Hubb
         this.hubbleClient = new HubbleClient({
             host: config.host
         });
+
         // FakeGato
         this.fakeGateHistoryService = undefined;
+
         this.update_interval = Number(config["update_interval"] || 60);
         this.setup();
     }
 
     setup() {
         this.fakeGateHistoryService = new FakeGatoHistoryService('weather', {displayName: 'HubbleCam'},{
-            size:4096, 				// optional - if you still need to specify the length
+            size:4096, 
             storage:'fs',
         });
         this.services = [
@@ -73,11 +75,11 @@ module.exports = (Service, Characteristic, FakeGatoHistoryService) => class Hubb
     }
 
     /**
-         * Log the temperature to the FakeGato-service.
-         * Only works if enableHistory is true and  pollingInterval > 0
-         * @param temperature
-         * @param humidity
-         */
+     * Log the temperature to the FakeGato-service.
+     * Only works if enableHistory is true and  pollingInterval > 0
+     * @param temperature
+     * @param humidity
+     */
     addHistory(temperature) {
         this.fakeGateHistoryService.addEntry({
             time: Math.round(new Date().valueOf() / 1000),
